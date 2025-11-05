@@ -1,7 +1,27 @@
-import { useMemo } from "react";
+import { useMemo, useEffect, useRef } from "react";
 import type { ActivityEvent, FilterState } from "../../types";
 
 export const ITEMS_PER_PAGE = 15 as const;
+
+export const useFilterChange = (
+  filters: FilterState,
+  onFilterChange: () => void
+) => {
+  const prevFiltersRef = useRef(filters);
+
+  useEffect(() => {
+    const hasFilterChanged =
+      prevFiltersRef.current.status !== filters.status ||
+      prevFiltersRef.current.datePreset !== filters.datePreset ||
+      prevFiltersRef.current.activityType !== filters.activityType ||
+      prevFiltersRef.current.searchText !== filters.searchText;
+
+    if (hasFilterChanged) {
+      onFilterChange();
+      prevFiltersRef.current = filters;
+    }
+  }, [filters, onFilterChange]);
+};
 
 export const usePagination = (items: ActivityEvent[], currentPage: number) => {
   return useMemo(() => {

@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useFilters } from "../../context";
 import activitiesData from "../../data.json";
-import { useFilteredActivities, usePagination } from "./utils";
+import { useFilterChange, useFilteredActivities, usePagination } from "./utils";
 import {
   StatusFilterComponent,
   DateFilterComponent,
@@ -15,16 +15,13 @@ import {
 export const ActivityFeed = () => {
   const { filters } = useFilters();
   const [currentPage, setCurrentPage] = useState(1);
+  useFilterChange(filters, () => setCurrentPage(1));
 
   const filteredActivities = useFilteredActivities(activitiesData, filters);
   const { totalPages, paginatedItems } = usePagination(
     filteredActivities,
     currentPage
   );
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filteredActivities]);
 
   return (
     <main>
