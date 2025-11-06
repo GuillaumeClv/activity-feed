@@ -10,11 +10,9 @@ export const useFilterChange = (
   const prevFiltersRef = useRef(filters);
 
   useEffect(() => {
-    const hasFilterChanged =
-      prevFiltersRef.current.status !== filters.status ||
-      prevFiltersRef.current.datePreset !== filters.datePreset ||
-      prevFiltersRef.current.activityType !== filters.activityType ||
-      prevFiltersRef.current.searchText !== filters.searchText;
+    const hasFilterChanged = (
+      Object.keys(filters) as Array<keyof FilterState>
+    ).some((key) => prevFiltersRef.current[key] !== filters[key]);
 
     if (hasFilterChanged) {
       onFilterChange();
