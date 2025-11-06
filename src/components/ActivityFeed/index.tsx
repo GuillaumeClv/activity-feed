@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { useFilters } from "../../context";
 import activitiesData from "../../data.json";
-import { useFilterChange, useFilteredActivities, usePagination } from "./utils";
+import {
+  useFilterChange,
+  useFilteredAndSortedActivities,
+  usePagination,
+} from "./utils";
 import {
   StatusFilterComponent,
   DateFilterComponent,
@@ -17,7 +21,10 @@ export const ActivityFeed = () => {
   const [currentPage, setCurrentPage] = useState(1);
   useFilterChange(filters, () => setCurrentPage(1));
 
-  const filteredActivities = useFilteredActivities(activitiesData, filters);
+  const filteredActivities = useFilteredAndSortedActivities(
+    activitiesData,
+    filters
+  );
   const { totalPages, paginatedItems } = usePagination(
     filteredActivities,
     currentPage

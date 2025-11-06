@@ -34,24 +34,15 @@ export const usePagination = (items: ActivityEvent[], currentPage: number) => {
   }, [items, currentPage]);
 };
 
-export const useFilteredActivities = (
+export const useFilteredAndSortedActivities = (
   activitiesData: ActivityEvent[],
   filters: FilterState
 ) =>
   useMemo(() => {
-    const filterByStatus = (activities: ActivityEvent[]) =>
-      filters.status === "ALL"
-        ? activities
-        : activities.filter((activity) => activity.status === filters.status);
+    const now = new Date();
+    let startDate: Date | null = null;
 
-    const filterByDatePreset = (activities: ActivityEvent[]) => {
-      if (filters.datePreset === "ALL") {
-        return activities;
-      }
-
-      const now = new Date();
-      let startDate: Date | null = null;
-
+    if (filters.datePreset !== "ALL") {
       switch (filters.datePreset) {
         case "LAST_HOUR":
           startDate = new Date(now.getTime() - 60 * 60 * 1000);
@@ -66,47 +57,49 @@ export const useFilteredActivities = (
           startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
           break;
       }
+    }
 
-      if (!startDate) {
-        return activities;
+    const searchLower = filters.searchText?.toLowerCase() || "";
+
+    const filtered = activitiesData.filter((activity) => {
+      if (filters.status !== "ALL" && activity.status !== filters.status) {
+        return false;
       }
 
-      return activities.filter((activity) => {
+      if (startDate) {
         const activityDate = new Date(activity.updatedAt || activity.createdAt);
-        return activityDate >= startDate && activityDate <= now;
-      });
-    };
 
-    const filterByActivityType = (activities: ActivityEvent[]) =>
-      filters.activityType
-        ? activities.filter(
-            (activity) => activity.type === filters.activityType
-          )
-        : activities;
-
-    const filterBySearchText = (activities: ActivityEvent[]) => {
-      if (!filters.searchText) {
-        return activities;
+        if (
+          isNaN(activityDate.getTime()) ||
+          activityDate < startDate ||
+          activityDate > now
+        ) {
+          return false;
+        }
       }
 
-      const searchLower = filters.searchText.toLowerCase();
-      return activities.filter(
-        (activity) =>
-          activity.description.toLowerCase().includes(searchLower) ||
-          activity.subject.toLowerCase().includes(searchLower)
-      );
-    };
+      if (
+        filters.activityType &&
+        filters.activityType.trim() &&
+        activity.type !== filters.activityType
+      ) {
+        return false;
+      }
 
-    const sortByDate = (activities: ActivityEvent[]) =>
-      [...activities].sort((a, b) => {
-        const dateA = new Date(a.updatedAt || a.createdAt).getTime();
-        const dateB = new Date(b.updatedAt || b.createdAt).getTime();
-        return dateB - dateA;
-      });
+      if (
+        searchLower &&
+        !activity.description.toLowerCase().includes(searchLower) &&
+        !activity.subject.toLowerCase().includes(searchLower)
+      ) {
+        return false;
+      }
 
-    return sortByDate(
-      filterBySearchText(
-        filterByActivityType(filterByDatePreset(filterByStatus(activitiesData)))
-      )
-    );
+      return true;
+    });
+
+    return filtered.sort((a, b) => {
+      const dateA = new Date(a.updatedAt || a.createdAt).getTime();
+      const dateB = new Date(b.updatedAt || b.createdAt).getTime();
+      return dateB - dateA;
+    });
   }, [filters, activitiesData]);
